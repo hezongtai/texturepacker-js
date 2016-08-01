@@ -16,7 +16,7 @@ const meta = require('./meta')
 module.exports = function texturepack(input, options, callback) {
   async.waterfall([
     function (cb) {
-      trim(input, cb)
+      trim(input, options.hasAlpha, cb)
     },
     function (files, cb) {
       bin(files, cb)
@@ -25,9 +25,10 @@ module.exports = function texturepack(input, options, callback) {
       options.width = width
       options.height = height
 
-      output(input, options, files, cb)
+      output(files, options, cb)
     },
-    function (files, cb) {
+    function (files, height, cb) {
+      options.height = height // POT UPDATE
       meta(files, options, cb)
     }
   ], callback)
