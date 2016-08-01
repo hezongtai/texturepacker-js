@@ -29,6 +29,11 @@ module.exports = (inputPath, hasAlpha, callback) => {
 
 // read all png files from input path
 function readDir(input, hasAlpha, files, callback) {
+  try {
+    fs.statSync(`${input}/temp`)
+  }catch(err) {
+    fs.mkdirSync(`${input}/temp`)
+  }
   fs.readdir(input, (err, images) => {
     if(err) throw err
     images.forEach(image => {
@@ -36,7 +41,7 @@ function readDir(input, hasAlpha, files, callback) {
         name: path.basename(image, '.png'),
         iPath: `${input}/${image}`,
         iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}` // alpha channel
-      })
+      }）
     })
     callback(null, files)
   })
