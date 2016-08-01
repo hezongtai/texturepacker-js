@@ -6,6 +6,8 @@ const path = require('path')
 const async = require('async')
 const exec = require('platform-command').exec
 
+const RESIZE = '75%'
+
 const sizeReg = / ([0-9]+)x([0-9]+) /
 const rectReg = / ([0-9]+)x([0-9]+)[\+\-]([0-9]+)[\+\-]([0-9]+) /
 
@@ -20,6 +22,9 @@ module.exports = (inputPath, hasAlpha, callback) => {
   async.waterfall([
     cb => {
       readDir(inputPath, hasAlpha, [], cb)
+    },
+    (files, cb) => {
+      resizeImages(files, cb)
     },
     (files, cb) => {
       getCropInfo(files, cb)
@@ -40,21 +45,33 @@ function readDir(input, hasAlpha, files, callback) {
       if(path.extname(image).toLowerCase() === '.png') files.push({
         name: path.basename(image, '.png'),
         iPath: `${input}/${image}`,
-        iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}` // alpha channel
-      }）
+        iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}`, // alpha channel
+        tPath: `${input}/temp/${image}`
+      })
     })
     callback(null, files)
   })
 }
 
-function getCropInfo(files, callback) {
+function resizeImages(files, callback){
   async.eachSeries(files, (file, next) => {
+    exec(`convert -resize ${RESIZE} ${file.iPath} ${file.tPath}`, (err) => {
+      if(err) throw err
+      next()
+    })
+  }, () => {
+    callback(null, files)
+  })
+}
+
+function getCropInfo(files, callback) {
+    async.eachSeries(files, (file, next) => {
     // file.tPath = path.join(os.tmpDir(), `${file.name}_trimmed.png`) // temp path for trimed file
 
 		// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
-    exec(`convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim info:-`, (err, stdout) => {
+    exec(`convert -define png:exclude-chunks=date ${file.tPath} -bordercolor transparent -border 1 -trim info:-`, (err, stdout) => {
       if(err) throw err
       const size = stdout.match(sizeReg)
 
