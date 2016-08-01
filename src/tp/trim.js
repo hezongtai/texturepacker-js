@@ -56,7 +56,7 @@ function readDir(input, hasAlpha, files, callback) {
 
 function resizeImages(files, callback){
   async.eachSeries(files, (file, next) => {
-    exec(`convert -resize ${RESIZE} ${file.iPath} ${file.tPath}`, (err) => {
+    exec(`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`, (err) => {
       if(err) throw err
       next()
     })
