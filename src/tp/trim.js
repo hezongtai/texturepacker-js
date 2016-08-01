@@ -9,8 +9,6 @@ const exec = require('platform-command').exec
 const sizeReg = / ([0-9]+)x([0-9]+) /
 const rectReg = / ([0-9]+)x([0-9]+)[\+\-]([0-9]+)[\+\-]([0-9]+) /
 
-const RESIZE = '75%'
-
 /**
  * Generate temporary trimmed image files
  * @param {string[]} input file path
@@ -21,13 +19,10 @@ const RESIZE = '75%'
 module.exports = (inputPath, hasAlpha, callback) => {
   async.waterfall([
     cb => {
-      readDir(inputPath, [], cb)
+      readDir(inputPath, hasAlpha, [], cb)
     },
     (files, cb) => {
-      trimImages(inputPath, files, cb)
-    },
-    (files, cb) => {
-      getTrimInfo(inputPath, files, cb)
+      getCropInfo(files, cb)
     }
   ], callback)
 }
@@ -43,21 +38,6 @@ function readDir(input, hasAlpha, files, callback) {
         iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}` // alpha channel
       })
     })
-    callback(null, files)
-  })
-}
-
-function trimImages(input, files, callback) {
-  async.eachSeries(files, (file, next) => {
-	// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
-    // only to list the result on what part of the image was trimmed, not the actual trimmed image
-    // use alpha channel's crop area
-
-    exec(`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`, err => {
-      if(err) throw err
-      next()
-    })
-  }, () => {
     callback(null, files)
   })
 }
