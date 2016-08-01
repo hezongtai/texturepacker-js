@@ -1,33 +1,34 @@
 'use strict'
 
-const BinPacker = require('./maxrectsbin')
+const binpacking = require('binpacking')
 
 module.exports = (files, callback) => {
-  const packer = new BinPacker(2048, 2048, false)
+  const packer = new binpacking.GrowingPacker()
   // max side sort
   files.sort((a, b) => {
     return msort(a, b, ['max', 'min', 'h', 'w'])
   })
 
-  const res = packer.insert2(files, 3)
-  callback(null, res, packer.maxW, packer.maxH)
+  packer.fit(files)
+
+  callback(null, files, packer.root.w, packer.root.h)
 }
 
 const Sorters = {
   w: (a, b) => {
-    return b.width - a.width
+    return b.w - a.w
   },
   h: (a, b) => {
-    return b.height - a.height
+    return b.h - a.h
   },
   a: (a, b) => {
     return b.area - a.area
   },
   max: (a, b) => {
-    return Math.max(b.width, b.height) - Math.max(a.width, a.height)
+    return Math.max(b.w, b.h) - Math.max(a.w, a.h)
   },
   min: (a, b) => {
-    return Math.min(b.width, b.height) - Math.min(a.width, a.height)
+    return Math.min(b.w, b.h) - Math.min(a.w, a.h)
   }
 }
 
