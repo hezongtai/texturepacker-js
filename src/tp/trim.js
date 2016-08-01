@@ -9,6 +9,8 @@ const exec = require('platform-command').exec
 const sizeReg = / ([0-9]+)x([0-9]+) /
 const rectReg = / ([0-9]+)x([0-9]+)[\+\-]([0-9]+)[\+\-]([0-9]+) /
 
+const RESIZE = '75%'
+
 /**
  * Generate temporary trimmed image files
  * @param {string[]} input file path
@@ -22,20 +24,44 @@ module.exports = (inputPath, hasAlpha, callback) => {
       readDir(inputPath, hasAlpha, [], cb)
     },
     (files, cb) => {
+      trimImages(inputPath, files, cb)
+    },
+    (files, cb) => {
       getCropInfo(files, cb)
     }
   ], callback)
 }
 
+function trimImages(input, files, callback) {
+  async.eachSeries(files, (file, next) => {
+	// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
+    // only to list the result on what part of the image was trimmed, not the actual trimmed image
+    // use alpha channel's crop area
+
+    exec(`convert -resize ${RESIZE} ${file.iPath} ${file.tPath}`, err => {
+      if(err) throw err
+      next()
+    })
+  }, () => {
+    callback(null, files)
+  })
+}
+
 // read all png files from input path
 function readDir(input, hasAlpha, files, callback) {
+  try {
+    fs.statSync(`${input}/trimmed`)
+  }catch(err) {
+    fs.mkdirSync(`${input}/trimmed`)
+  }
+
   fs.readdir(input, (err, images) => {
     if(err) throw err
     images.forEach(image => {
       if(path.extname(image).toLowerCase() === '.png') files.push({
         name: path.basename(image, '.png'),
         iPath: `${input}/${image}`,
-        iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}` // alpha channel
+        tPath: `${os.tmpdir()}/tp_${(new Date()).getTime()}_${image}`
       })
     })
     callback(null, files)
@@ -49,7 +75,7 @@ function getCropInfo(files, callback) {
 		// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
-    exec(`convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim info:-`, (err, stdout) => {
+    exec(`convert -define png:exclude-chunks=date ${file.tPath} -bordercolor transparent -border 1 -trim info:-`, (err, stdout) => {
       if(err) throw err
       const size = stdout.match(sizeReg)
 
