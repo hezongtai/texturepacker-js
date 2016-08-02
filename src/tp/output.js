@@ -1,62 +1,54 @@
 'use strict'
+const fs = require('fs')
+const path = require('path')
 
 const exec = require('platform-command').exec
 
-module.exports = (files, options, callback) => {
-  const canvasW = roundToPowerOfTwo(options.width)
-  const canvasH = roundToPowerOfTwo(options.height)
+module.exports = (input, options, files, callback) => {
+  options.width = roundToPowerOfTwo(options.width)
+  options.height = roundToPowerOfTwo(options.height)
   // input images
-  const command = [`convert -define png:exclude-chunks=date -size ${canvasW}x${canvasH} xc:none`]
+  const command = [`convert -define png:exclude-chunks=date -size ${options.width}x${options.height} xc:none`]
 
   // combine all images by packer's info
   files.forEach(file => {
-    const offsetX = (file.fit.x - file.crop.x) >= 0 ? `+${file.fit.x - file.crop.x}` : `-${Math.abs(file.fit.x - file.crop.x)}`
-    const offsetY = file.fit.y - file.crop.y >= 0 ? `+${file.fit.y - file.crop.y}` : `-${Math.abs(file.fit.y - file.crop.y)}`
-
-    command.push(`"${file.iPath}" -geometry ${offsetX}${offsetY} -composite`)
+    command.push(`"${file.path}" -geometry +${file.x}+${file.y} -composite`)
   })
 
   command.push(`${options.output}/${options.name}.png`)
 
-  // input channel images
-  if(options.hasAlpha) {
-    command.push(`&& convert -define png:exclude-chunks=date -size ${canvasW}x${canvasH} xc:black -alpha off`)
-
-    files.forEach(file => {
-      const offsetX = (file.fit.x - file.crop.x) >= 0 ? `+${file.fit.x - file.crop.x}` : `-${Math.abs(file.fit.x - file.crop.x)}`
-      const offsetY = file.fit.y - file.crop.y >= 0 ? `+${file.fit.y - file.crop.y}` : `-${Math.abs(file.fit.y - file.crop.y)}`
-
-      command.push(`"${file.iPathA}" -geometry ${offsetX}${offsetY} -composite`)
-    })
-
-    command.push(`${options.output}/a/${options.name}_a.png`)
-
-    // remove alpha channel from origin
-    command.push(`&& convert ${options.output}/${options.name}.png -background black -alpha remove ${options.output}/${options.name}.png`)
-  }else {
-    // extract alpha channel from origin
-    command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/a/${options.name}_a.png`)
-    // replace it to green
-    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background lime -alpha shape ${options.output}/a/${options.name}_a.png`)
-    // delete alpha channel
-    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background black -alpha remove ${options.output}/a/${options.name}_a.png`)
+  const reg = /(.+)(_a)$/
+  // if the alpha channel's folder not existed, then create an alpha map automatically
+  if(reg.exec(options.name) === null) {
+    try{
+      fs.statSync(`${input}_a`)
+    }catch(err) {
+      // extract alpha channel from origin
+      command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/${options.name}_a.png`)
+      // replace it to green
+      command.push(`&& convert ${options.output}/${options.name}_a.png -background lime -alpha shape ${options.output}/${options.name}_a.png`)
+      // delete alpha channel
+      command.push(`&& convert ${options.output}/${options.name}_a.png -background black -alpha remove ${options.output}/${options.name}_a.png`)
+    }
   }
+    // remove alpha channel from origin
+  command.push(`&& convert ${options.output}/${options.name}.png -background black -alpha remove ${options.output}/${options.name}.png`)
 
   files.forEach(file => {
-    file.x = file.fit.x
-    file.y = file.fit.y
+    // create trim frame
+    file.trimX = file.trim.x
+    file.trimY = file.trim.y
+    file.trimW = file.trim.width
+    file.trimH = file.trim.height
 
-    // create pivot points
-    file.pX = ((file.crop.w * 0.5) - file.crop.x) / file.w
-    file.pY = (file.h - ((file.crop.h * 0.604) - file.crop.y)) / file.h
+    file.name = path.basename(file.path).match(/_(\d+\.png)$/)[1]
 
-    delete file.fit
-    delete file.crop
+    delete file.trim
   })
 
   exec(command.join(' '), err => {
     if(err) throw err
-    callback(null, files, canvasH)
+    callback(null, files)
   })
 }
 
