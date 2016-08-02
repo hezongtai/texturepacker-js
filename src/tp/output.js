@@ -48,7 +48,7 @@ module.exports = (input, options, files, callback) => {
     file.trimW = file.trim.width
     file.trimH = file.trim.height
 
-    file.name = path.basename(file.path).match(/(\d+\.png)$/)[1]
+    file.name = path.basename(file.path).match(/(\d+\.png)$/)[1] 
     
     // create pivot points
     file.pX = ((file.trimW * 0.5) - file.trimX) / file.width
