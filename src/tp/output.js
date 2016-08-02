@@ -17,23 +17,30 @@ module.exports = (input, options, files, callback) => {
 
   command.push(`${options.output}/${options.name}.png`)
 
-  const reg = /(.+)(_a)$/
-  // if the alpha channel's folder not existed, then create an alpha map automatically
-  if(reg.exec(options.name) === null) {
-    try{
-      fs.statSync(`${input}_a`)
-    }catch(err) {
-      // extract alpha channel from origin
-      command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/${options.name}_a.png`)
-      // replace it to green
-      command.push(`&& convert ${options.output}/${options.name}_a.png -background lime -alpha shape ${options.output}/${options.name}_a.png`)
-      // delete alpha channel
-      command.push(`&& convert ${options.output}/${options.name}_a.png -background black -alpha remove ${options.output}/${options.name}_a.png`)
-    }
-  }
-    // remove alpha channel from origin
-  command.push(`&& convert ${options.output}/${options.name}.png -background black -alpha remove ${options.output}/${options.name}.png`)
+  // input channel images
+  if(options.hasAlpha) {
+    command.push(`&& convert -define png:exclude-chunks=date -size ${canvasW}x${canvasH} xc:black -alpha off`)
 
+    files.forEach(file => {
+      const offsetX = (file.fit.x - file.crop.x) >= 0 ? `+${file.fit.x - file.crop.x}` : `-${Math.abs(file.fit.x - file.crop.x)}`
+      const offsetY = file.fit.y - file.crop.y >= 0 ? `+${file.fit.y - file.crop.y}` : `-${Math.abs(file.fit.y - file.crop.y)}`
+
+      command.push(`"${file.iPathA}" -geometry ${offsetX}${offsetY} -composite`)
+    })
+
+    command.push(`${options.output}/a/${options.name}_a.png`)
+
+    // remove alpha channel from origin
+    command.push(`&& convert ${options.output}/${options.name}.png -background black -alpha remove ${options.output}/${options.name}.png`)
+  }else {
+    // extract alpha channel from origin
+    command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/a/${options.name}_a.png`)
+    // replace it to green
+    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background lime -alpha shape ${options.output}/a/${options.name}_a.png`)
+    // delete alpha channel
+    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background black -alpha remove ${options.output}/a/${options.name}_a.png`)
+  }
+  
   files.forEach(file => {
     // create trim frame
     file.trimX = file.trim.x
