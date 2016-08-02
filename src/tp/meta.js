@@ -2,54 +2,28 @@
 
 const fs = require('fs')
 
-const yaml = require('js-yaml')
-
 module.exports = (files, options, callback) => {
-  const sprites = []
+  const frames = {}
+
   files.forEach(file => {
-    const sprite = {}
-    sprite.serializedVersion = 2
-    sprite.name = file.name
-    sprite.rect = {
-      serializedVersion: 2,
-      x: file.x,
-      y: options.height - (file.y + file.h),
-      width: file.w,
-      height: file.h
-    }
-    sprite.alignment = 9
-    sprite.pivot = {x: file.pX, y: file.pY}
-    sprites.push(sprite)
+    frames[file.name] = {}
+    frames[file.name].rotated = false
+    frames[file.name].trimmed = true
+    frames[file.name].frame = {x: file.x, y: file.y, w: file.width, h: file.height}
+    frames[file.name].spriteSourceSize = {x: file.trimX, y: file.trimY, w: file.width, h: file.height}
+    frames[file.name].sourceSize = {w: file.trimW, h: file.trimH}
   })
 
-  fs.stat(`${options.output}/${options.name}.png.meta`, err => {
-    let doc = null
-    if(err) {
-      // meta file not exist
-      doc = {
-        TextureImporter: {
-          spriteMode: 2,
-          textureType: 8,
-          spriteSheet: {
-            serializedVersion: 2,
-            sprites: []
-          }
-        }
-      }
-    }else{
-      try{
-        doc = yaml.safeLoad(fs.readFileSync(`${options.output}/${options.name}.png.meta`, 'utf-8'))
-      } catch(err) {
-        throw err
-      }
-    }
+  const meta = {
+    image: `${options.name}.png`,
+    format: 'RGB888',
+    size: {w: options.width, h: options.height},
+    scale: 1
+  }
 
-    doc.TextureImporter.spriteSheet.sprites = sprites
-    fs.writeFile(`${options.output}/${options.name}.png.meta`, yaml.safeDump(doc), err => {
-      if (err) {
-        return console.log(err)
-      }
-      callback()
-    })
+  const json = {frames, meta}
+  fs.writeFile(`${options.output}/${options.name}.json`, JSON.stringify(json, null, 2), err => {
+    if(err) throw err
+    callback()
   })
 }
