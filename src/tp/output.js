@@ -1,5 +1,4 @@
 'use strict'
-const fs = require('fs')
 const path = require('path')
 
 const exec = require('platform-command').exec
@@ -7,6 +6,7 @@ const exec = require('platform-command').exec
 module.exports = (input, options, files, callback) => {
   options.width = roundToPowerOfTwo(options.width)
   options.height = roundToPowerOfTwo(options.height)
+
   // input images
   const command = [`convert -define png:exclude-chunks=date -size ${options.width}x${options.height} xc:none`]
 
@@ -17,15 +17,12 @@ module.exports = (input, options, files, callback) => {
 
   command.push(`${options.output}/${options.name}.png`)
 
-  // input channel images
+  // input channel itrims
   if(options.hasAlpha) {
-    command.push(`&& convert -define png:exclude-chunks=date -size ${canvasW}x${canvasH} xc:black -alpha off`)
+    command.push(`&& convert -define png:exclude-chunks=date -size ${options.width}x${options.height} xc:black -alpha off`)
 
     files.forEach(file => {
-      const offsetX = (file.fit.x - file.crop.x) >= 0 ? `+${file.fit.x - file.crop.x}` : `-${Math.abs(file.fit.x - file.crop.x)}`
-      const offsetY = file.fit.y - file.crop.y >= 0 ? `+${file.fit.y - file.crop.y}` : `-${Math.abs(file.fit.y - file.crop.y)}`
-
-      command.push(`"${file.iPathA}" -geometry ${offsetX}${offsetY} -composite`)
+      command.push(`"${file.pathA}" -geometry +${file.x}+${file.y} -composite`)
     })
 
     command.push(`${options.output}/a/${options.name}_a.png`)
@@ -40,16 +37,15 @@ module.exports = (input, options, files, callback) => {
     // delete alpha channel
     command.push(`&& convert ${options.output}/a/${options.name}_a.png -background black -alpha remove ${options.output}/a/${options.name}_a.png`)
   }
-  
+
   files.forEach(file => {
     // create trim frame
     file.trimX = file.trim.x
     file.trimY = file.trim.y
     file.trimW = file.trim.width
     file.trimH = file.trim.height
+    file.name = path.basename(file.path).match(/[0-9]+/)[0]
 
-    file.name = path.basename(file.path).match(/(\d+\.png)$/)[1] 
-    
     // create pivot points
     file.pX = ((file.trimW * 0.5) - file.trimX) / file.width
     file.pY = (file.height - ((file.trimH * 0.604) - file.trimY)) / file.height
