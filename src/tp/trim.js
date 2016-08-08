@@ -8,9 +8,6 @@ const exec = require('platform-command').exec
 
 const RESIZE = '75%'
 
-const sizeReg = / ([0-9]+)x([0-9]+) /
-const rectReg = / ([0-9]+)x([0-9]+)[\+\-]([0-9]+)[\+\-]([0-9]+) /
-
 /**
  * Generate temporary trimmed image files
  * @param {string[]} input file path
@@ -24,7 +21,7 @@ module.exports = (inputPath, hasAlpha, callback) => {
       readDir(inputPath, hasAlpha, [], cb)
     },
     (files, cb) => {
-      trimImages(inputPath, files, cb)
+      trimImages(inputPath, hasAlpha, files, cb)
     },
     (files, cb) => {
       getTrimInfo(inputPath, files, cb)
@@ -35,8 +32,10 @@ module.exports = (inputPath, hasAlpha, callback) => {
 // read all png files from input path
 function readDir(input, hasAlpha, files, callback) {
   try {
+    if(hasAlpha) fs.statSync(`${input}_a/temp`)
     fs.statSync(`${input}/temp`)
   }catch(err) {
+    if(hasAlpha) fs.mkdirSync(`${input}_a/temp`)
     fs.mkdirSync(`${input}/temp`)
   }
   fs.readdir(input, (err, images) => {
@@ -46,21 +45,26 @@ function readDir(input, hasAlpha, files, callback) {
         name: path.basename(image, '.png'),
         iPath: `${input}/${image}`,
         iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}`, // alpha channel
-        tPath: `${input}/temp/${image}`
+        tPath: `${input}/temp/${image}`,
+        tPathA: `${input}_a/temp/${image}`
       })
     })
     callback(null, files)
   })
 }
 
-
-function trimImages(input, files, callback) {
+function trimImages(input, hasAlpha, files, callback) {
   async.eachSeries(files, (file, next) => {
 	// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
 
-    exec(`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`, err => {
+    const command = [`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`]
+    if(hasAlpha) {
+      command.push(`&& convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.tPathA}`)
+    }
+
+    exec(command.join(' '), err => {
       if(err) throw err
       next()
     })
@@ -90,7 +94,6 @@ function getTrimInfo(input, files, callback) {
       file.height = parseInt(size[2], 10)
 
       file.area = file.width * file.height
-      // console.log(file.area)
 
       const rect = item.match(/ ([0-9]+)x([0-9]+)[\+\-]([0-9]+)[\+\-]([0-9]+) /)
       file.trim = {}
@@ -100,10 +103,10 @@ function getTrimInfo(input, files, callback) {
       file.trim.height = parseInt(rect[2], 10) - 2
 
       file.path = item.match(/.+\.png/)[0]
-
+      const spath = file.path
+      file.pathA = spath.replace(/\/temp/i, '_a/temp')
       trimmedFiles.push(file)
     })
-
     callback(null, trimmedFiles)
   })
 }
