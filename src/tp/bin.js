@@ -4,6 +4,7 @@ const BinPacker = require('./maxrectsbin')
 
 module.exports = (files, callback) => {
   const packer = new BinPacker(2048, 2048, false)
+
   // max side sort
   files.sort((a, b) => {
     return msort(a, b, ['max', 'min', 'h', 'w'])
