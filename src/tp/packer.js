@@ -16,7 +16,7 @@ const meta = require('./meta')
 module.exports = function texturepack(input, options, callback) {
   async.waterfall([
     function (cb) {
-      trim(input, cb)
+      trim(input, options.hasAlpha, cb)
     },
     function (files, cb) {
       bin(files, cb)
