@@ -18,6 +18,7 @@ module.exports = (files, options, callback) => {
     image: `${options.name}.png`,
     format: 'RGB888',
     size: {w: options.width, h: options.height},
+    totalFrames: files.length,
     scale: 1
   }
 
