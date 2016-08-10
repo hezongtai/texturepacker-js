@@ -59,9 +59,9 @@ function trimImages(input, hasAlpha, files, callback) {
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
 
-    const command = [`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`]
+    const command = [`convert -define png:exclude-chunks=date ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`]
     if(hasAlpha) {
-      command.push(`&& convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.tPathA}`)
+      command.push(`&& convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.tPathA}`)
     }
 
     exec(command.join(' '), err => {
