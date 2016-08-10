@@ -12,7 +12,7 @@ const generateNPC = require('./src/npc/generate')
 const generatePet = require('./src/pet/generate')
 
 const PATH = 'svn/sprites'
-const PATH_OUTPUT = 'svn/test_output'
+const PATH_OUTPUT = 'svn/sprites_output'
 
 console.log(`Packing images from ${PATH} to ${PATH_OUTPUT}`)
 
