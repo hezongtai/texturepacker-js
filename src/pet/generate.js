@@ -24,9 +24,9 @@ function readDir(root, output, path, callback) {
     }) 
     
     if(files.length > 7){
-    	hasAlpha = true;
+    	hasAlpha = true
     }else{
-        hasAlpha = false;
+        hasAlpha = false
     }
 
     async.eachSeries(files, (file, next) => {
