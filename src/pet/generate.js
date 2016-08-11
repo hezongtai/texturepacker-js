@@ -30,14 +30,15 @@ function readDir(root, output, path, callback) {
     }
 
     async.eachSeries(files, (file, next) => {
-	    const p = /([pet])\/(.+)/.exec(path)[2]
-	    if(ACTION.indexOf(file) >= 0) {
-            createSprite(root, output, {path: `${path}/${file}`, name: file, hasAlpha: hasAlpha}, next)	
-	        bar.tick({input: `${root}/${path}`, output: `${output}/${p}/${file}`})
-	    }else{
-	        next()
-	    }
-	}, callback)
+      if(ACTION.indexOf(file) >= 0) {
+        createSprite(root, output, {path: `${path}/${file}`, name: file}, next)
+
+        const p = /([pet])\/(.+)/.exec(path)[2]
+        bar.tick({input: `${root}/${path}`, output: `${output}/${p}/${file}`})
+      }else{
+        next()
+      }
+    }, callback)
 
   })
 }
