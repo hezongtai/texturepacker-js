@@ -25,8 +25,7 @@ const questions = [
       {name: 'role'},
       {name: 'npc'},
       {name: 'companion'},
-      {name: 'pet'},
-      {name: 'all'}]
+      {name: 'pet'}]
   }
 ]
 inquirer.prompt(questions).then(answers => {
@@ -42,8 +41,6 @@ inquirer.prompt(questions).then(answers => {
       break
     case 'pet':
       selectPet('pet')
-    case 'all':
-      break
     default:
       break
   }
@@ -59,7 +56,7 @@ function selectRole() {
       choices: []
     }
     files.forEach(file => {
-      if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion') {
+      if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion' && file !== 'pet') {
         question.choices.push(file)
       }
     })
