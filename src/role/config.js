@@ -166,13 +166,15 @@ function genNewVO(file, config, cb) {
 
 // create subfolders by new structs
 function createFolders(file, vo, cb) {
-
-  // create body
-  const dirB = `${PATH_OUTPUT}/role_${file}/@body`
-  try{
-    fs.accessSync(dirB)
-  }catch(err) {
-    fs.mkdirSync(dirB)
+  // create body, weapon, decorations
+  for(const key in vo) {
+    if(key === 'weapon') continue
+    const dir = `${PATH_OUTPUT}/role_${file}/@${key}`
+    try{
+      fs.accessSync(dir)
+    }catch(err) {
+      fs.mkdirSync(dir)
+    }
   }
 
   // create weapon
@@ -190,13 +192,6 @@ function createFolders(file, vo, cb) {
     }catch(err) {
       fs.mkdirSync(dirK)
     }
-  }
-
-  const dirA = `${PATH_OUTPUT}/role_${file}/@avatar`
-  try{
-    fs.accessSync(dirA)
-  }catch(err) {
-    fs.mkdirSync(dirA)
   }
   
   // create decorations
