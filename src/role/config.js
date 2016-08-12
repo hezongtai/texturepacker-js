@@ -166,61 +166,46 @@ function genNewVO(file, config, cb) {
 
 // create subfolders by new structs
 function createFolders(file, vo, cb) {
-  // create body, weapon, decorations
-  for(const key in vo) {
-    const dir = `${PATH_OUTPUT}/role_${file}/${key}`
-    try{
-      fs.accessSync(dir)
-    }catch(err) {
-      fs.mkdirSync(dir)
-    }
-  }
 
   // create body
-  for(const key in vo.body) {
-    const dir = `${PATH_OUTPUT}/role_${file}/body/${key}`
-    try{
-      fs.accessSync(dir)
-    }catch(err) {
-      fs.mkdirSync(dir)
-    }
+  const dirB = `${PATH_OUTPUT}/role_${file}/@body`
+  try{
+    fs.accessSync(dirB)
+  }catch(err) {
+    fs.mkdirSync(dirB)
   }
 
   // create weapon
-  for(const key in vo.weapon) {
-    const dir = `${PATH_OUTPUT}/role_${file}/weapon/${key}`
-    try{
-      fs.accessSync(dir)
-    }catch(err) {
-      fs.mkdirSync(dir)
-    }
-
-    for(const action in vo.weapon[key]) {
-      try{
-        fs.accessSync(`${dir}/${action}`)
-      }catch(err) {
-        fs.mkdirSync(`${dir}/${action}`)
-      }
-    }
-  }
-
-  // create decorations
-  const dir = `${PATH_OUTPUT}/role_${file}/avatar/decoration`
+  const dirW = `${PATH_OUTPUT}/role_${file}/weapon`
   try{
-    fs.accessSync(dir)
+    fs.accessSync(dirW)
   }catch(err) {
-    fs.mkdirSync(dir)
+    fs.mkdirSync(dirW)
   }
-
-  if(!isEmpty(vo.avatar.decoration)) {
-    for(const key in vo.avatar.decoration) {
-      const dir = `${PATH_OUTPUT}/role_${file}/avatar/decoration/${key}`
-      try{
-        fs.accessSync(dir)
-      }catch(err) {
-        fs.mkdirSync(dir)
-      }
+    
+  for(const key in vo.weapon) {
+    const dirK = `${PATH_OUTPUT}/role_${file}/weapon/${key}`
+    try{
+      fs.accessSync(dirK)
+    }catch(err) {
+      fs.mkdirSync(dirK)
     }
   }
+
+  const dirA = `${PATH_OUTPUT}/role_${file}/@avatar`
+  try{
+    fs.accessSync(dirA)
+  }catch(err) {
+    fs.mkdirSync(dirA)
+  }
+  
+  // create decorations
+  const dirD = `${PATH_OUTPUT}/role_${file}/@avatar/_decoration`
+  try{
+    fs.accessSync(dirD)
+  }catch(err) {
+    fs.mkdirSync(dirD)
+  }
+
   cb(null, vo)
 }
