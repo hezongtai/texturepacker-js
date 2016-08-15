@@ -6,6 +6,8 @@ const path = require('path')
 const async = require('async')
 const exec = require('platform-command').exec
 
+const RESIZE = '75%'
+
 /**
  * Generate temporary trimmed image files
  * @param {string[]} input file path
@@ -22,20 +24,29 @@ module.exports = (inputPath, hasAlpha, callback) => {
       trimImages(inputPath, hasAlpha, files, cb)
     },
     (files, cb) => {
-      getTrimInfo(inputPath, hasAlpha, files, cb)
+      getTrimInfo(inputPath, files, cb)
     }
   ], callback)
 }
 
 // read all png files from input path
 function readDir(input, hasAlpha, files, callback) {
+  try {
+    if(hasAlpha) fs.statSync(`${input}_a/temp`)
+    fs.statSync(`${input}/temp`)
+  }catch(err) {
+    if(hasAlpha) fs.mkdirSync(`${input}_a/temp`)
+    fs.mkdirSync(`${input}/temp`)
+  }
   fs.readdir(input, (err, images) => {
     if(err) throw err
     images.forEach(image => {
       if(path.extname(image).toLowerCase() === '.png') files.push({
         name: path.basename(image, '.png'),
         iPath: `${input}/${image}`,
-        iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}`// alpha channel
+        iPathA: hasAlpha ? `${input}_a/${image}` : `${input}/${image}`, // alpha channel
+        tPath: `${input}/temp/${image}`,
+        tPathA: `${input}_a/temp/${image}`
       })
     })
     callback(null, files)
@@ -48,10 +59,9 @@ function trimImages(input, hasAlpha, files, callback) {
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
 
-    const command = [`convert -define png:exclude-chunks=date ${file.iPath} -bordercolor transparent -border 1 -trim ${file.iPath}`]
-
+    const command = [`convert -define png:exclude-chunks=date ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`]
     if(hasAlpha) {
-      command.push(`&& convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.iPathA}`)
+      command.push(`&& convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.tPathA}`)
     }
 
     exec(command.join(' '), err => {
@@ -63,10 +73,11 @@ function trimImages(input, hasAlpha, files, callback) {
   })
 }
 
-function getTrimInfo(input, hasAlpha, files, callback) {
+function getTrimInfo(input, files, callback) {
   const filePaths = files.map(file => {
-    return '"' + file.iPathA + '"'
+    return '"' + file.tPath + '"'
   })
+
   const trimmedFiles = []
 
   exec('identify ' + filePaths.join(' '), (err, stdout) => {
@@ -91,13 +102,9 @@ function getTrimInfo(input, hasAlpha, files, callback) {
       file.trim.width = parseInt(rect[1], 10) - 2
       file.trim.height = parseInt(rect[2], 10) - 2
 
-      if(hasAlpha) {
-        file.pathA = item.match(/.+\.png/)[0]
-        const spath = file.pathA
-        file.path = spath.replace(/_a\//i, '/')
-      } else {
-        file.path = item.match(/.+\.png/)[0]
-      }
+      file.path = item.match(/.+\.png/)[0]
+      const spath = file.path
+      file.pathA = spath.replace(/\/temp/i, '_a/temp')
       trimmedFiles.push(file)
     })
     callback(null, trimmedFiles)
