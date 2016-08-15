@@ -100,10 +100,10 @@ function genNewVO(file, config, cb) {
   newVO.avatar.decoration = {} // create a decoration obj to hold all decoration's sprites
 
   for(const key in config) {
-    newVO.weapon[WEAPON_ID[key]] = {}
+    newVO.weapon[key] = {}
     for(const action in config[key]) {
       const aVO = config[key][action]
-      newVO.weapon[WEAPON_ID[key]][action] = aVO.weapon
+      newVO.weapon[key][action] = aVO.weapon
     }
   }
 
@@ -111,12 +111,11 @@ function genNewVO(file, config, cb) {
   const decorations = {}
 
   for(const key in config) {
-    const weaponNum = WEAPON_ID[key]
     // weapon
-    newVO.weapon[weaponNum] = {}
+    newVO.weapon[key] = {}
     for(const action in config[key]) {
       const aVO = config[key][action]
-      newVO.weapon[weaponNum][action] = aVO.weapon
+      newVO.weapon[key][action] = aVO.weapon
     }
 
     // body && decorations
@@ -129,7 +128,7 @@ function genNewVO(file, config, cb) {
         body[aVO.body].action = action
       }
 
-      body[aVO.body].str += `_${weaponNum}`
+      body[aVO.body].str += `_${key}`
 
       if(aVO.deco) {
         if(!decorations[aVO.deco]) {
@@ -138,7 +137,7 @@ function genNewVO(file, config, cb) {
           decorations[aVO.deco].action = action
         }
 
-        decorations[aVO.deco].str += `_${weaponNum}`
+        decorations[aVO.deco].str += `_${key}`
       }
     }
   }
@@ -166,7 +165,6 @@ function genNewVO(file, config, cb) {
 
 // create subfolders by new structs
 function createFolders(file, vo, cb) {
-  console.log(vo)
   // create body, weapon, decorations
   for(const key in vo) {
     if(key === 'weapon') continue
