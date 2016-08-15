@@ -100,10 +100,10 @@ function genNewVO(file, config, cb) {
   newVO.avatar.decoration = {} // create a decoration obj to hold all decoration's sprites
 
   for(const key in config) {
-    newVO.weapon[key] = {}
+    newVO.weapon[WEAPON_ID[key]] = {}
     for(const action in config[key]) {
       const aVO = config[key][action]
-      newVO.weapon[key][action] = aVO.weapon
+      newVO.weapon[WEAPON_ID[key]][action] = aVO.weapon
     }
   }
 
@@ -111,11 +111,12 @@ function genNewVO(file, config, cb) {
   const decorations = {}
 
   for(const key in config) {
+    const weaponNum = WEAPON_ID[key]
     // weapon
-    newVO.weapon[key] = {}
+    newVO.weapon[weaponNum] = {}
     for(const action in config[key]) {
       const aVO = config[key][action]
-      newVO.weapon[key][action] = aVO.weapon
+      newVO.weapon[weaponNum][action] = aVO.weapon
     }
 
     // body && decorations
@@ -128,7 +129,7 @@ function genNewVO(file, config, cb) {
         body[aVO.body].action = action
       }
 
-      body[aVO.body].str += `_${key}`
+      body[aVO.body].str += `_${weaponNum}`
 
       if(aVO.deco) {
         if(!decorations[aVO.deco]) {
@@ -137,7 +138,7 @@ function genNewVO(file, config, cb) {
           decorations[aVO.deco].action = action
         }
 
-        decorations[aVO.deco].str += `_${key}`
+        decorations[aVO.deco].str += `_${weaponNum}`
       }
     }
   }
@@ -167,8 +168,17 @@ function genNewVO(file, config, cb) {
 function createFolders(file, vo, cb) {
   // create body, weapon, decorations
   for(const key in vo) {
-    if(key === 'weapon') continue
-    const dir = `${PATH_OUTPUT}/role_${file}/@${key}`
+    const dir = `${PATH_OUTPUT}/role_${file}/${key}`
+    try{
+      fs.accessSync(dir)
+    }catch(err) {
+      fs.mkdirSync(dir)
+    }
+  }
+
+  // create body
+  for(const key in vo.body) {
+    const dir = `${PATH_OUTPUT}/role_${file}/body/${key}`
     try{
       fs.accessSync(dir)
     }catch(err) {
@@ -177,29 +187,40 @@ function createFolders(file, vo, cb) {
   }
 
   // create weapon
-  const dirW = `${PATH_OUTPUT}/role_${file}/weapon`
-  try{
-    fs.accessSync(dirW)
-  }catch(err) {
-    fs.mkdirSync(dirW)
-  }
-
   for(const key in vo.weapon) {
-    const dirK = `${PATH_OUTPUT}/role_${file}/weapon/@${key}`
+    const dir = `${PATH_OUTPUT}/role_${file}/weapon/${key}`
     try{
-      fs.accessSync(dirK)
+      fs.accessSync(dir)
     }catch(err) {
-      fs.mkdirSync(dirK)
+      fs.mkdirSync(dir)
+    }
+
+    for(const action in vo.weapon[key]) {
+      try{
+        fs.accessSync(`${dir}/${action}`)
+      }catch(err) {
+        fs.mkdirSync(`${dir}/${action}`)
+      }
     }
   }
 
   // create decorations
-  const dirD = `${PATH_OUTPUT}/role_${file}/@avatar/_decoration`
+  const dir = `${PATH_OUTPUT}/role_${file}/avatar/decoration`
   try{
-    fs.accessSync(dirD)
+    fs.accessSync(dir)
   }catch(err) {
-    fs.mkdirSync(dirD)
+    fs.mkdirSync(dir)
   }
 
+  if(!isEmpty(vo.avatar.decoration)) {
+    for(const key in vo.avatar.decoration) {
+      const dir = `${PATH_OUTPUT}/role_${file}/avatar/decoration/${key}`
+      try{
+        fs.accessSync(dir)
+      }catch(err) {
+        fs.mkdirSync(dir)
+      }
+    }
+  }
   cb(null, vo)
 }
