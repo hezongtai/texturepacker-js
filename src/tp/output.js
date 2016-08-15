@@ -25,17 +25,17 @@ module.exports = (input, options, files, callback) => {
       command.push(`"${file.pathA}" -geometry +${file.x}+${file.y} -composite`)
     })
 
-    command.push(`${options.output}/${options.name}_a.png`)
+    command.push(`${options.output}/a/${options.name}_a.png`)
 
     // remove alpha channel from origin
     command.push(`&& convert ${options.output}/${options.name}.png -background black -alpha remove ${options.output}/${options.name}.png`)
   }else {
     // extract alpha channel from origin
-    command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/${options.name}_a.png`)
+    command.push(`&& convert ${options.output}/${options.name}.png -alpha extract ${options.output}/a/${options.name}_a.png`)
     // replace it to green
-    command.push(`&& convert ${options.output}/${options.name}_a.png -background lime -alpha shape ${options.output}/${options.name}_a.png`)
+    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background lime -alpha shape ${options.output}/a/${options.name}_a.png`)
     // delete alpha channel
-    command.push(`&& convert ${options.output}/${options.name}_a.png -background black -alpha remove ${options.output}/${options.name}_a.png`)
+    command.push(`&& convert ${options.output}/a/${options.name}_a.png -background black -alpha remove ${options.output}/a/${options.name}_a.png`)
   }
 
   files.forEach(file => {
