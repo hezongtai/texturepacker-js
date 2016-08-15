@@ -23,10 +23,10 @@ function readDir(root, output, path, callback) {
 
     async.eachSeries(files, (file, next) => {
       if(ACTION.indexOf(file) >= 0) {
-        createSprite(root, output, {path: `${path}/${file}`, pathOut: `${path}`, name: file}, next)
+        createSprite(root, output, {path: `${path}/${file}`, name: file}, next)
 
         const p = /([npc|companion])\/(.+)/.exec(path)[2]
-        bar.tick({input: `${root}/${path}`, output: `${output}/@${p}`})
+        bar.tick({input: `${root}/${path}`, output: `${output}/${p}/${file}`})
       }else{
         next()
       }
@@ -35,9 +35,12 @@ function readDir(root, output, path, callback) {
 }
 
 function createSprite(root, output, options, next) {
-  const p = /([npc|companion])\/(.+)/.exec(options.pathOut)[2]
-  mkdirp(`${output}/@${p}`, err => {
+  const p = /([npc|companion])\/(.+)/.exec(options.path)[2]
+  mkdirp(`${output}/${p}`, err => {
     if(err) throw err
-    pack(`${root}/${options.path}`, {output: `${output}/@${p}`, name: options.name, hasAlpha: false}, next)
+    mkdirp(`${output}/${p}/a`, error => {
+      if(error) throw error
+      pack(`${root}/${options.path}`, {output: `${output}/${p}`, name: options.name, hasAlpha: false}, next)
+    })
   })
 }
