@@ -59,7 +59,7 @@ function selectRole() {
       choices: []
     }
     files.forEach(file => {
-      if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion') {
+      if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion' && file !== 'pet') {
         question.choices.push(file)
       }
     })
