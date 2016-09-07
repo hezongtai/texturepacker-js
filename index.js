@@ -12,7 +12,7 @@ const generateNPC = require('./src/npc/generate')
 const generatePet = require('./src/pet/generate')
 
 const PATH = 'svn/sprites'
-const PATH_OUTPUT = 'svn/sprites_output'
+const PATH_OUTPUT = 'svn/test_output'
 
 console.log(`Packing images from ${PATH} to ${PATH_OUTPUT}`)
 
@@ -86,8 +86,12 @@ function selectRole() {
 }
 
 function packRole(name, callback) {
-  configRole(name, PATH, PATH_OUTPUT, () => {
-    generateRole(name, PATH, PATH_OUTPUT, () => {
+  configRole(name, PATH, PATH_OUTPUT, config => {
+    config.name = name
+    config.input = PATH
+    config.output = PATH_OUTPUT
+
+    generateRole(config, () => {
       if(callback) callback()
     })
   })
