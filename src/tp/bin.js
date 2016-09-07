@@ -10,7 +10,7 @@ module.exports = (files, callback) => {
     return msort(a, b, ['max', 'min', 'h', 'w'])
   })
 
-  const res = packer.insert2(files, 3)
+  const res = packer.insert2(files, 1)
   callback(null, res, packer.maxW, packer.maxH)
 }
 
