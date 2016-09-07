@@ -49,6 +49,7 @@
     "mkdirp": "^0.5.1",
     "optimist": "^0.6.1",
     "platform-command": "0.0.1",
+    "plist": "^1.2.0",
     "progress": "^1.1.8",
     "xlsx": "^0.8.0"
   }
