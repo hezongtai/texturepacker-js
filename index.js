@@ -71,7 +71,7 @@ function selectRole() {
       if(answers.roleName === '-- all --') {
         if(err) throw err
         async.eachSeries(files, (file, next) => {
-          if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion') {
+          if(fs.statSync(`${PATH}/${file}`).isDirectory() && file !== '.svn' && file !== 'npc' && file !== 'companion' && file !== 'pet') {
             packRole(file, next)
           }else{
             next()
@@ -85,6 +85,7 @@ function selectRole() {
 }
 
 function packRole(name, callback) {
+  console.log(`++++++`)
   configRole(name, PATH, PATH_OUTPUT, (caller, vo) => {
     generateRole(name, vo, () => {
       if(callback) callback()
