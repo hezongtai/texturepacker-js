@@ -1,42 +1,55 @@
 'use strict'
 
 const fs = require('fs')
-const plist = require('plist')
+
+const yaml = require('js-yaml')
 
 module.exports = (files, options, callback) => {
-  const frames = {}
-
+  const sprites = []
   files.forEach(file => {
-    frames[file.name] = {}
-    // frames[file.name].rotated = false
-    // frames[file.name].trimmed = true
-    // frames[file.name].frame = {x: file.x, y: file.y, w: file.width, h: file.height}
-    // frames[file.name].spriteSourceSize = {x: file.trimX, y: file.trimY, w: file.width, h: file.height}
-    // frames[file.name].sourceSize = {w: file.trimW, h: file.trimH}
-    //
-    const offsetX = (file.width * 0.5) - ((file.trimW * 0.5) - file.trimX)
-    const offsetY = (file.height * 0.5) - ((file.trimH * 0.5) - file.trimY)
-
-    frames[file.name].aliases = []
-    frames[file.name].spriteOffset = `{${offsetX},${offsetY}}`
-    frames[file.name].spriteSize = `{${file.width},${file.height}}`
-    frames[file.name].spriteSourceSize = `{${file.trimW},${file.trimH}}`
-    frames[file.name].textureRect = `{{${file.x},${file.y}},{${file.width},${file.height}}}`
-    frames[file.name].textureRotated = false
+    const sprite = {}
+    sprite.serializedVersion = 2
+    sprite.name = file.name
+    sprite.rect = {
+      serializedVersion: 2,
+      x: file.x,
+      y: options.height - (file.y + file.height),
+      width: file.width,
+      height: file.height
+    }
+    sprite.alignment = 9
+    sprite.pivot = {x: file.pX, y: file.pY}
+    sprites.push(sprite)
   })
 
-  const metadata = {
-    premultiplyAlpha: false,
-    format: 3,
-    pixelFormat: 'RGB888',
-    textureFileName: `${options.name}.pvr`,
-    realTextureFileName: `${options.name}.pvr`,
-    size: `{${options.width},${options.height}}`
-  }
+  fs.stat(`${options.output}/${options.name}.png.meta`, err => {
+    let doc = null
+    if(err) {
+      // meta file not exist
+      doc = {
+        TextureImporter: {
+          spriteMode: 2,
+          textureType: 8,
+          spriteSheet: {
+            serializedVersion: 2,
+            sprites: []
+          }
+        }
+      }
+    }else{
+      try{
+        doc = yaml.safeLoad(fs.readFileSync(`${options.output}/${options.name}.png.meta`, 'utf-8'))
+      } catch(err) {
+        throw err
+      }
+    }
 
-  const json = {frames, metadata}
-  fs.writeFile(`${options.output}/${options.name}.plist`, plist.build(json), err => {
-    if(err) throw err
-    callback()
+    doc.TextureImporter.spriteSheet.sprites = sprites
+    fs.writeFile(`${options.output}/${options.name}.png.meta`, yaml.safeDump(doc), err => {
+      if (err) {
+        return console.log(err)
+      }
+      callback()
+    })
   })
 }
