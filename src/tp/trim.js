@@ -32,12 +32,6 @@ module.exports = (inputPath, callback) => {
 
 // read all png files from input path
 function readDir(input, files, callback) {
-  try {
-    fs.statSync(`${input}/trimmed`)
-  }catch(err) {
-    fs.mkdirSync(`${input}/trimmed`)
-  }
-
   fs.readdir(input, (err, images) => {
     if(err) throw err
     images.forEach(image => {
@@ -57,7 +51,7 @@ function trimImages(input, files, callback) {
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
 
-    exec(`convert -define png:exclude-chunks=date -resize ${RESIZE} ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`, err => {
+    exec(`convert -define png:exclude-chunks=date ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`, err => {
       if(err) throw err
       next()
     })
