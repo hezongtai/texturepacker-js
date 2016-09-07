@@ -21,9 +21,12 @@ module.exports = (file, input, output, next) => {
       readConfig(file, cb)
     },
     (config, cb) => {
+      this.config = config
       saveConfig(file, config, cb)
     }
-  ], next)
+  ], () => {
+    next(this.config)
+  })
 }
 
 // make character's output dir
