@@ -24,7 +24,6 @@ module.exports = function texturepack(input, options, callback) {
     function (files, width, height, cb) {
       options.width = width
       options.height = height
-
       output(input, options, files, cb)
     },
     function (files, cb) {
