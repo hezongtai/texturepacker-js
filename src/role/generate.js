@@ -7,7 +7,7 @@ const async = require('async')
 const ProgressBar = require('progress')
 
 const pack = require('../tp/texturepacker')
-const crop = require('../tp/crop')
+// const crop = require('../tp/crop')
 
 // generate spritesheets by vo
 module.exports = function generate(config, cb) {
