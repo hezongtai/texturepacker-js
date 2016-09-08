@@ -90,9 +90,9 @@ module.exports = function generate(config, cb) {
         bar.tick({input: io.iDir, output: io.oDir})
       }, cb)
     },
-    cb => {
-      crop(genList, cb)
-    },
+    // cb => {
+    //  crop(genList, cb)
+    // },
     cb => {
       fs.writeFileSync(`${output}/${name}/config.json`, JSON.stringify(config, null, 2))
       cb()
