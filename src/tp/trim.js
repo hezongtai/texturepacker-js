@@ -58,7 +58,10 @@ function trimImages(input, hasAlpha, files, callback) {
 	// have to add 1px transparent border because imagemagick does trimming based on border pixel's color
     // only to list the result on what part of the image was trimmed, not the actual trimmed image
     // use alpha channel's crop area
-
+    console.log(file.iPath)
+    console.log(file.tPath)
+    console.log(file.iPathA)
+    console.log(file.tPathA)
     const command = [`convert -define png:exclude-chunks=date ${file.iPath} -bordercolor transparent -border 1 -trim ${file.tPath}`]
     if(hasAlpha) {
       command.push(`&& convert -define png:exclude-chunks=date ${file.iPathA} -bordercolor transparent -border 1 -trim ${file.tPathA}`)
