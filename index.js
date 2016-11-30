@@ -11,6 +11,8 @@ const generateNPC = require('./src/npc/generate')
 
 const generatePet = require('./src/pet/generate')
 
+const generateOther = require('./src/other/generate')
+
 const PATH = 'svn/sprites'
 const PATH_OUTPUT = 'svn/sprites_output'
 
@@ -26,6 +28,7 @@ const questions = [
       {name: 'npc'},
       {name: 'companion'},
       {name: 'pet'},
+      {name: 'other'},
       {name: 'all'}]
   }
 ]
@@ -42,6 +45,10 @@ inquirer.prompt(questions).then(answers => {
       break
     case 'pet':
       selectPet('pet')
+      break
+    case 'other':
+      selectOther('other')
+      break
     case 'all':
       break
     default:
@@ -163,6 +170,43 @@ function selectPet(path) {
 
 function packPet(path, name, next) {
   generatePet(PATH, PATH_OUTPUT, {pet: path, action: name}, () => {
+    if(next) next()
+  })
+}
+
+function selectOther(path) {
+  fs.readdir(`${PATH}/${path}`, (err, files) => {
+    if(err) throw err
+    const question = {
+      type: 'list',
+      name: 'otherName',
+      message: 'select a other:',
+      choices: []
+    }
+    files.forEach(file => {
+      if(fs.statSync(`${PATH}/${path}/${file}`).isDirectory()) {
+        question.choices.push(file)
+      }
+    })
+
+    question.choices.push('-- all --')
+    question.choices.push(new inquirer.Separator())
+
+    inquirer.prompt(question).then(answers => {
+      if(answers.otherName === '-- all --') {
+        async.eachSeries(files, (file, next) => {
+          packPet(path, file, next)
+        })
+      } else {
+        packOther(path, answers.otherName, () => {
+        })
+      }
+    })
+  })
+}
+
+function packOther(path, name, next) {
+  generateOther(PATH, PATH_OUTPUT, {other: path, action: name}, () => {
     if(next) next()
   })
 }

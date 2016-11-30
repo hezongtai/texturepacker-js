@@ -56,10 +56,19 @@ module.exports = function generate(file, vo, cb) {
 
   // deco
   for(const key in vo.avatar.decoration) {
-    const hasAlpha = false
+    let hasAlpha = false
 
     const oDir = `${PATH_OUTPUT}/role_${file}/avatar/decoration/${key}` // output dir
-    const iDir = `${PATH}/${file}/${vo.avatar.decoration[key]}` // input dir
+    const path = vo.avatar.decoration[key]
+    const newPath = path.substr(0, path.length - 2)
+    let iDir = ``
+    if(path.substr(path.length - 2, 2) === '_a') {
+      iDir = `${PATH}/${file}/${newPath}`
+      hasAlpha = true
+    } else {
+      iDir = `${PATH}/${file}/${path}`
+    }
+    // const iDir = `${PATH}/${file}/${vo.avatar.decoration[key]}`
 
     // create a folder for alpha channel if not existed
     try{
